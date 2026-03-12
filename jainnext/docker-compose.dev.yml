@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: jainnext-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: jainnext_db
+      POSTGRES_USER: jainnext_user
+      POSTGRES_PASSWORD: jainnext_dev_password_2024
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5433:5432"
+    volumes:
+      - jain:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d
+    networks:
+      - jainnext-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jainnext_user -d jainnext_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+
+volumes:
+  jain:
+    driver: local
+
+networks:
+  jainnext-network:
+    driver: bridge

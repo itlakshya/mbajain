@@ -1,0 +1,179 @@
+
+type LeadAttribute = { Attribute: string; Value: string };
+type LeadRecord = Record<string, string | null>;
+
+const getEnv = () => ({
+    host: process.env.LSQ_HOST,
+    accessKey: process.env.LSQ_ACCESS_KEY,
+    secretKey: process.env.LSQ_SECRET_KEY,
+});
+
+const normalizePhoneForLsq = (value?: string | null) => {
+    if (!value) return null;
+    const digits = String(value).replace(/\D/g, "");
+    if (!digits) return null;
+    if (digits.length > 10) {
+        return digits.slice(-10);
+    }
+    return digits;
+};
+
+const normalizeHost = (host: string) => {
+    const trimmed = host.trim();
+    const withScheme = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+    const withoutTrailing = withScheme.replace(/\/+$/, "");
+    return withoutTrailing.replace(/\/v2$/i, "");
+};
+
+const buildLeadCaptureUrl = (host: string) => {
+    const base = normalizeHost(host);
+    const params = new URLSearchParams({
+        LeadUpdateBehavior: "UpdateOnlyEmptyFields"
+    });
+    return `${base}/v2/LeadManagement.svc/Lead.Capture?${params.toString()}`;
+};
+
+export const sendLeadSquaredCapture = async (
+    attributes: LeadAttribute[],
+    searchBy: "Phone" | "EmailAddress" = "Phone"
+) => {
+    const { host, accessKey, secretKey } = getEnv();
+    if (process.env.ENABLE_LSQ_SYNC !== "true" || !host || !accessKey || !secretKey) {
+        return;
+    }
+
+    const url = buildLeadCaptureUrl(host);
+    const payload = [...attributes, { Attribute: "SearchBy", Value: searchBy }];
+    
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+
+    try {
+        const res = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "x-LSQ-AccessKey": accessKey,
+                "x-LSQ-SecretKey": secretKey
+            },
+            body: JSON.stringify(payload),
+            signal: controller.signal
+        });
+
+        if (!res.ok) {
+            const text = await res.text();
+            throw new Error(`LeadSquared capture failed (${res.status}): ${text}`);
+        }
+        return await res.json();
+    } finally {
+        clearTimeout(timeout);
+    }
+};
+
+export const fetchLeadByPhone = async (phone: string): Promise<LeadRecord | null> => {
+    const { host, accessKey, secretKey } = getEnv();
+    if (process.env.ENABLE_LSQ_SYNC !== "true" || !host || !accessKey || !secretKey) return null;
+
+    const base = normalizeHost(host);
+    const url = new URL(`${base}/v2/LeadManagement.svc/RetrieveLeadByPhoneNumber`);
+    url.searchParams.set("accessKey", accessKey);
+    url.searchParams.set("secretKey", secretKey);
+    url.searchParams.set("phone", phone);
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+
+    try {
+        const res = await fetch(url.toString(), {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            signal: controller.signal
+        });
+
+        if (!res.ok) {
+            const text = await res.text();
+            throw new Error(`LeadSquared retrieve failed (${res.status}): ${text}`);
+        }
+
+        const data = (await res.json()) as LeadRecord[];
+        if (!Array.isArray(data) || data.length === 0) return null;
+        return data[0] || null;
+    } finally {
+        clearTimeout(timeout);
+    }
+};
+
+const extractDomain = (url: string) => {
+    try {
+        const domain = new URL(url.startsWith('http') ? url : `https://${url}`).hostname;
+        return domain.replace('www.', '');
+    } catch {
+        return url;
+    }
+};
+
+export const syncLeadWithLsq = async (params: {
+    fullName: string;
+    email: string;
+    mobile: string;
+    workExp: string;
+    source: string;
+    sourceUrl?: string | null;
+}) => {
+    const phone = normalizePhoneForLsq(params.mobile);
+    if (!phone) throw new Error("Invalid phone number");
+
+    const name = (params.fullName || "").trim();
+    const [firstName, ...rest] = name.split(/\s+/);
+    const lastName = rest.join(" ").trim();
+
+    const sourceForLsq =
+        params.sourceUrl && params.sourceUrl.trim()
+            ? (extractDomain(params.sourceUrl) || params.sourceUrl.trim())
+            : (process.env.APP_URL ? extractDomain(process.env.APP_URL) : "jainonline.com");
+
+    const attributes: LeadAttribute[] = [
+        { Attribute: "FirstName", Value: firstName || "" },
+        { Attribute: "LastName", Value: lastName || "" },
+        { Attribute: "Phone", Value: phone },
+        { Attribute: "EmailAddress", Value: params.email || "" },
+        { Attribute: "mx_Work_Experience", Value: params.workExp || "" },
+        { Attribute: "Source", Value: sourceForLsq }
+    ].filter(attr => attr.Value !== "");
+
+    if (process.env.ENABLE_LSQ_SYNC !== "true") {
+        console.log("LSQ Sync disabled, skipping:", attributes);
+        return;
+    }
+
+    try {
+        const lead = await fetchLeadByPhone(phone);
+        if (lead) {
+            // Find attributes that are missing or empty in LSQ
+            const pending = attributes.filter((attr) => {
+                if (attr.Attribute === "Phone") return true; // Keep phone as identifier
+                const current = lead[attr.Attribute];
+                if (current === null || current === undefined) return true;
+                if (typeof current === "string" && current.trim() === "") return true;
+                return false;
+            });
+
+            // If only phone is present, nothing to update
+            if (pending.length <= 1) {
+                return { status: "already_up_to_date" };
+            }
+
+            await sendLeadSquaredCapture(pending, "Phone");
+            return { status: "updated_empty_fields" };
+        } else {
+            // Create new lead
+            await sendLeadSquaredCapture(attributes, "Phone");
+            return { status: "created_new_lead" };
+        }
+    } catch (err) {
+        console.error("LeadSquared Sync Error:", err);
+        throw err;
+    }
+};
