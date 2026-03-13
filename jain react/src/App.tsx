@@ -1,14 +1,10 @@
-'use client';
-
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
-import Image from 'next/image';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { trackFormSubmit, trackButtonClick } from '@/lib/gtm';
 import { 
   CheckCircle2, 
   ChevronDown, 
@@ -21,6 +17,7 @@ import {
   X,
   GraduationCap,
   TrendingUp,
+  Users,
   ShieldCheck
 } from 'lucide-react';
 
@@ -307,15 +304,6 @@ const Hero = ({ onApply }: { onApply: (title?: string, subtitle?: string) => voi
   );
 };
 
-const ACCREDITATION_LOGOS = [
-  { src: '/naac.webp', label: 'NAAC A++', sub: 'Highest Grade', width: 80, height: 80 },
-  { src: '/nirf.png', label: 'NIRF', sub: 'Top 100 University', width: 80, height: 80 },
-  { src: '/ugcdeb.png', label: 'UGC-DEB', sub: 'Entitled Program', width: 80, height: 80 },
-  { src: '/aicte.webp', label: 'AICTE', sub: 'Approved', width: 80, height: 80 },
-  { src: '/aacsb.png', label: 'AACSB', sub: 'Member', width: 80, height: 80 },
-  { src: '/nba.jpg', label: 'NBA', sub: 'Accredited', width: 80, height: 80 },
-];
-
 const Accreditations = () => {
   return (
     <section className="py-12 bg-paper border-y border-black/5">
@@ -329,17 +317,16 @@ const Accreditations = () => {
           </div>
           
           <div className="flex md:grid md:grid-cols-3 lg:grid-cols-6 overflow-x-auto md:overflow-x-visible snap-x snap-mandatory md:snap-none gap-4 no-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
-            {ACCREDITATION_LOGOS.map((acc, i) => (
+            {[
+              { label: "NAAC A++", sub: "Highest Grade", color: "bg-emerald-500" },
+              { label: "NIRF", sub: "Top 100 University", color: "bg-blue-500" },
+              { label: "UGC-DEB", sub: "Entitled Program", color: "bg-amber-500" },
+              { label: "AICTE", sub: "Approved", color: "bg-orange-500" },
+              { label: "AACSB", sub: "Member", color: "bg-indigo-500" },
+              { label: "NBA", sub: "Accredited", color: "bg-rose-500" }
+            ].map((acc, i) => (
               <div key={i} className="flex-shrink-0 w-[60vw] sm:w-[40vw] md:w-auto snap-center bg-white p-6 rounded-2xl border border-black/5 shadow-sm hover:shadow-md transition-all flex flex-col items-center text-center group">
-                <div className="relative mb-4 flex items-center justify-center group-hover:scale-105 transition-transform" style={{ width: acc.width, height: acc.height }}>
-                  <Image
-                    src={acc.src}
-                    alt={acc.label}
-                    width={acc.width}
-                    height={acc.height}
-                    className="object-contain"
-                  />
-                </div>
+                <div className={`w-2.5 h-2.5 rounded-full ${acc.color} mb-4 group-hover:scale-125 transition-transform`} />
                 <div className="font-bold text-secondary text-base md:text-lg mb-1">{acc.label}</div>
                 <div className="text-[10px] md:text-xs text-secondary/40 font-bold uppercase tracking-wider">{acc.sub}</div>
               </div>
@@ -406,7 +393,7 @@ const Comparison = ({ onApply }: { onApply: (title?: string, subtitle?: string) 
 
         <div className="flex flex-col items-center gap-3">
           <button 
-            onClick={() => onApply("Choose the Smart Move", "Join 50,000+ students who transformed their careers")}
+            onClick={() => onApply("Speak to Counselor", "Enter your details to get a call back from our academic experts.")}
             className="bg-primary text-secondary px-10 py-4 rounded-full text-lg font-bold hover:scale-105 transition-transform shadow-xl shadow-primary/30 flex items-center gap-2"
           >
             Choose the smart move <ArrowRight className="w-5 h-5" />
@@ -590,7 +577,7 @@ const Careers = ({ onApply }: { onApply: (title?: string, subtitle?: string) => 
 
         <div className="flex flex-col items-center gap-2 md:gap-3">
           <button 
-            onClick={() => onApply("Launch your Global Career", "Unlock high-growth roles in the global financial sector.")}
+            onClick={() => onApply("Speak to Counselor", "Enter your details to get a call back from our academic experts.")}
             className="bg-primary text-secondary px-8 py-3.5 md:px-10 md:py-4 rounded-2xl md:rounded-full text-base md:text-lg font-bold hover:scale-105 transition-transform shadow-xl shadow-primary/30 flex items-center gap-2"
           >
             Launch your global career <ArrowRight className="w-5 h-5" />
@@ -708,7 +695,7 @@ const CertificateSection = ({ onApply }: { onApply: (title?: string, subtitle?: 
 
         <div className="flex flex-col items-center gap-3">
           <button 
-            onClick={() => onApply("Speak to Counselor", "Start your journey towards a globally recognized MBA")}
+            onClick={() => onApply("Speak to Counselor", "Enter your details to get a call back from our academic experts.")}
             className="bg-primary text-secondary px-10 py-4 rounded-full text-lg font-bold hover:scale-105 transition-transform shadow-xl shadow-primary/30 flex items-center gap-2"
           >
             Get your global degree <ArrowRight className="w-5 h-5" />
@@ -830,34 +817,23 @@ const Footer = () => {
   );
 };
 
-declare global {
-  interface Window {
-    grecaptcha: any;
-  }
-}
-
-export default function Page() {
+export default function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalStep, setModalStep] = useState(1);
   const [phone, setPhone] = useState("");
   const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [workExp, setWorkExp] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [modalContent, setModalContent] = useState({
     title: "Speak to Counselor",
     subtitle: "Enter your details to get a call back from our experts."
   });
 
   const openModal = (title?: string, subtitle?: string) => {
-    const modalTitle = title || "Speak to Counselor";
-    const modalSubtitle = subtitle || "Enter your details to get a call back from our experts.";
-    trackButtonClick({ button_name: modalTitle, cta_label: modalSubtitle });
-    setModalContent({ title: modalTitle, subtitle: modalSubtitle });
+    setModalContent({
+      title: title || "Speak to Counselor",
+      subtitle: subtitle || "Enter your details to get a call back from our experts."
+    });
     setFullName("");
     setPhone("");
-    setEmail("");
-    setWorkExp("");
     setModalStep(1);
     setIsModalOpen(true);
   };
@@ -865,59 +841,7 @@ export default function Page() {
   const handleModalStep1Submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (phone.length >= 10 && fullName.trim().length > 0) {
-      trackFormSubmit({ form_name: 'lead_modal', form_step: 'step1', source: modalContent.title });
       setModalStep(2);
-    }
-  };
-
-  const handleFinalSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    try {
-      // Execute reCAPTCHA
-      let recaptchaToken = "";
-      try {
-        if (window.grecaptcha) {
-          recaptchaToken = await new Promise((resolve) => {
-            window.grecaptcha.ready(() => {
-              window.grecaptcha.execute(process.env.NEXT_PUBLIC_GOOGLE_RECAPTCHE_SITE_KEY, { action: 'submit' }).then((token: string) => {
-                resolve(token);
-              });
-            });
-          });
-        }
-      } catch (reError) {
-        console.error("reCAPTCHA Error:", reError);
-      }
-
-      const response = await fetch('/api/sync-lead', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          fullName,
-          email,
-          mobile: phone,
-          workExp,
-          source: `Jain Online - ${modalContent.title}`,
-          sourceUrl: typeof window !== 'undefined' ? window.location.href : undefined,
-          recaptchaToken,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to sync with LeadSquared');
-      }
-
-      trackFormSubmit({ form_name: 'lead_modal', form_step: 'final', source: `Jain Online - ${modalContent.title}` });
-      setIsModalOpen(false);
-      alert("Thank you! Our counselor will reach out to you shortly.");
-    } catch (error) {
-      console.error(error);
-      alert("Something went wrong. Please try again.");
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -1036,42 +960,31 @@ export default function Page() {
                     <h3 className="text-2xl font-bold text-secondary mb-2">Complete Your Profile</h3>
                     <p className="text-secondary/60">Just a few more details to get you started.</p>
                   </div>
-                  <form className="space-y-5" onSubmit={handleFinalSubmit}>
+                  <form className="space-y-5" onSubmit={(e) => { e.preventDefault(); setIsModalOpen(false); }}>
                     <div className="space-y-1.5">
                       <label className="text-xs font-bold text-secondary/50 uppercase tracking-wider ml-1">Email Address</label>
                       <input 
                         type="email" 
                         required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
                         placeholder="Enter your email"
                         className="w-full px-6 py-4 rounded-xl bg-paper border border-black/5 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all font-medium"
                       />
                     </div>
                     <div className="space-y-1.5 relative">
                       <label className="text-xs font-bold text-secondary/50 uppercase tracking-wider ml-1">Current Status / Work Experience</label>
-                      <select 
-                        required 
-                        value={workExp}
-                        onChange={(e) => setWorkExp(e.target.value)}
-                        className="w-full px-6 py-4 rounded-xl bg-paper border border-black/5 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all font-medium appearance-none cursor-pointer"
-                      >
+                      <select required className="w-full px-6 py-4 rounded-xl bg-paper border border-black/5 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all font-medium appearance-none cursor-pointer">
                         <option value="">Select Experience</option>
-                        <option value="Graduate and Above – No Experience">Graduate and Above – No Experience</option>
-                        <option value="0–1 Yr Experience">0–1 Yr Experience</option>
-                        <option value="2–5 Yrs Experience">2–5 Yrs Experience</option>
-                        <option value="5+ Yrs Experience">5+ Yrs Experience</option>
+                        <option value="graduate">Graduate and Above – No Experience</option>
+                        <option value="0-1">0–1 Yr Experience</option>
+                        <option value="2-5">2–5 Yrs Experience</option>
+                        <option value="5+">5+ Yrs Experience</option>
                       </select>
                       <div className="absolute right-6 bottom-4 pointer-events-none text-secondary/40">
                         <ChevronDown className="w-5 h-5" />
                       </div>
                     </div>
-                    <button 
-                      type="submit" 
-                      disabled={isSubmitting}
-                      className="w-full bg-primary text-secondary py-5 rounded-xl text-lg font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 mt-4 disabled:opacity-50"
-                    >
-                      {isSubmitting ? "Connecting..." : "Submit & connect"}
+                    <button type="submit" className="w-full bg-primary text-secondary py-5 rounded-xl text-lg font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 mt-4">
+                      Submit & connect
                     </button>
                   </form>
                 </>
