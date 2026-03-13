@@ -139,9 +139,15 @@ const CONTENT = {
     "Corporate Treasurer"
   ],
   hiringPartners: [
-    "Google", "Amazon", "Flipkart", "Accenture", "Deloitte", 
-    "KPMG", "EY", "PwC", "HDFC Bank", "ICICI Bank", 
-    "HSBC", "Capgemini", "Infosys", "TCS"
+    { name: "Google", logo: "/hiring/google.webp" },
+    { name: "Amazon", logo: "/hiring/amazone.webp" },
+    { name: "Flipkart", logo: "/hiring/flipkart.webp" },
+    { name: "Accenture", logo: "/hiring/accenture.webp" },
+    { name: "Deloitte", logo: "/hiring/deloitte.webp" },
+    { name: "KPMG", logo: "/hiring/kpmg.webp" },
+    { name: "EY", logo: "/hiring/ey.webp" },
+    { name: "HDFC Bank", logo: "/hiring/hdfcbank.webp" },
+    { name: "ICICI Bank", logo: "/hiring/icicibank.webp" }
   ],
   fee: {
     emi: "₹12,781",
@@ -187,7 +193,7 @@ const Navbar = ({ onApply }: { onApply: (title?: string, subtitle?: string) => v
           
           <div className="hidden md:flex items-center gap-6">
             <a
-              href="https://wa.me/919061277777?text=Im%20interested%20in%20MBA%2Cneed%20more%20details."
+              href="https://wa.me/919061277777?text=I'm%20interested%20in%20Jain%20MBA%2C%20need%20more%20details."
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 text-[#25D366] font-bold hover:opacity-80 transition-opacity"
@@ -207,7 +213,7 @@ const Navbar = ({ onApply }: { onApply: (title?: string, subtitle?: string) => v
 
           <div className="flex items-center gap-4 md:hidden">
             <a
-              href="https://wa.me/919061277777?text=Im%20interested%20in%20MBA%2Cneed%20more%20details."
+              href="https://wa.me/919061277777?text=I'm%20interested%20in%20Jain%20MBA%2C%20need%20more%20details."
               target="_blank"
               rel="noopener noreferrer"
               className="text-[#25D366] hover:opacity-80 transition-opacity"
@@ -504,7 +510,7 @@ const Curriculum = ({ onApply }: { onApply: (title?: string, subtitle?: string) 
 
 const BrightFuture = () => {
   return (
-    <section className="py-16 md:py-20 bg-white overflow-hidden">
+    <section className="pt-8 pb-16 md:pt-10 md:pb-20 bg-white overflow-hidden">
       <div className="max-w-7xl mx-auto px-4">
         <div className="max-w-4xl mx-auto text-center">
           <motion.div
@@ -694,7 +700,7 @@ const CertificateSection = ({ onApply }: { onApply: (title?: string, subtitle?: 
           <div className="order-1 lg:order-2">
             <div className="relative p-4 bg-paper rounded-[2rem] border border-black/5 shadow-2xl">
               <img 
-                src="https://images.unsplash.com/photo-1589330694653-ded6df03f754?auto=format&fit=crop&q=80&w=1000" 
+                src="/sample certificate JAIN.jpeg" 
                 alt="Sample Certificate" 
                 className="w-full rounded-xl shadow-lg"
                 referrerPolicy="no-referrer"
@@ -731,11 +737,17 @@ const HiringPartners = () => {
           <p className="text-secondary/50 font-medium">Join our graduates at top global organizations.</p>
         </div>
         
-        <div className="relative">
-          <div className="flex gap-8 animate-marquee whitespace-nowrap">
+        <div className="relative overflow-hidden group py-4">
+          <div className="flex gap-4 md:gap-8 animate-marquee whitespace-nowrap w-max">
             {[...CONTENT.hiringPartners, ...CONTENT.hiringPartners].map((brand, i) => (
-              <div key={i} className="bg-white px-10 py-6 rounded-2xl border border-black/5 shadow-sm flex items-center justify-center min-w-[180px]">
-                <span className="text-secondary/40 font-bold text-xl uppercase tracking-widest">{brand}</span>
+              <div key={i} className="bg-white px-8 py-5 rounded-2xl border border-black/5 shadow-sm flex items-center justify-center min-w-[150px] md:min-w-[200px] hover:shadow-md transition-shadow">
+                <Image 
+                  src={brand.logo} 
+                  alt={brand.name} 
+                  width={120} 
+                  height={40} 
+                  className="h-8 md:h-10 object-contain"
+                />
               </div>
             ))}
           </div>
@@ -1059,9 +1071,9 @@ export default function Page() {
                       >
                         <option value="">Select Experience</option>
                         <option value="Graduate and Above – No Experience">Graduate and Above – No Experience</option>
-                        <option value="0–1 Yr Experience">0–1 Yr Experience</option>
-                        <option value="2–5 Yrs Experience">2–5 Yrs Experience</option>
-                        <option value="5+ Yrs Experience">5+ Yrs Experience</option>
+                        <option value="0–1 Yr">0–1 Yr</option>
+                        <option value="2–5 Yrs">2–5 Yrs</option>
+                        <option value="5+ Yrs">5+ Yrs</option>
                       </select>
                       <div className="absolute right-6 bottom-4 pointer-events-none text-secondary/40">
                         <ChevronDown className="w-5 h-5" />

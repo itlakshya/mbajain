@@ -9,7 +9,7 @@
   --color-secondary: #002E5B;
   --color-paper: #F8F9FA;
 
-  --animate-marquee: marquee 15s linear infinite;
+  --animate-marquee: marquee 12s linear infinite;
 
   @keyframes marquee {
     from { transform: translateX(0); }
