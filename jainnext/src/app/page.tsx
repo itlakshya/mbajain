@@ -875,10 +875,43 @@ export default function Page() {
     setIsModalOpen(true);
   };
 
-  const handleModalStep1Submit = (e: React.FormEvent) => {
+  const handleModalStep1Submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (phone.length >= 10 && fullName.trim().length > 0) {
       trackFormSubmit({ form_name: 'lead_modal', form_step: 'step1', source: modalContent.title });
+      
+      // Perform initial sync with name and phone
+      try {
+        let recaptchaToken = "";
+        try {
+          if (window.grecaptcha) {
+            recaptchaToken = await new Promise((resolve) => {
+              window.grecaptcha.ready(() => {
+                window.grecaptcha.execute(process.env.NEXT_PUBLIC_GOOGLE_RECAPTCHE_SITE_KEY, { action: 'step1' }).then((token: string) => {
+                  resolve(token);
+                });
+              });
+            });
+          }
+        } catch (reError) {
+          console.error("reCAPTCHA Step 1 Error:", reError);
+        }
+
+        fetch('/api/sync-lead', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fullName,
+            mobile: phone,
+            source: `Jain Online - ${modalContent.title}`,
+            sourceUrl: typeof window !== 'undefined' ? window.location.href : undefined,
+            recaptchaToken,
+          }),
+        }).catch(err => console.error("Step 1 background sync failed:", err));
+      } catch (err) {
+        console.error("Step 1 sync error:", err);
+      }
+
       setModalStep(2);
     }
   };
