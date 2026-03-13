@@ -839,6 +839,7 @@ declare global {
 export default function Page() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalStep, setModalStep] = useState(1);
+  const [showSuccess, setShowSuccess] = useState(false);
   const [phone, setPhone] = useState("");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -912,7 +913,7 @@ export default function Page() {
 
       trackFormSubmit({ form_name: 'lead_modal', form_step: 'final', source: `Jain Online - ${modalContent.title}` });
       setIsModalOpen(false);
-      alert("Thank you! Our counselor will reach out to you shortly.");
+      setShowSuccess(true);
     } catch (error) {
       console.error(error);
       alert("Something went wrong. Please try again.");
@@ -1076,6 +1077,41 @@ export default function Page() {
                   </form>
                 </>
               )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Success Modal */}
+      <AnimatePresence>
+        {showSuccess && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center px-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowSuccess(false)}
+              className="absolute inset-0 bg-secondary/80 backdrop-blur-md"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 30 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 30 }}
+              className="relative bg-white w-full max-w-md rounded-[3rem] shadow-2xl p-10 overflow-hidden text-center"
+            >
+              <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-8">
+                <CheckCircle2 className="w-10 h-10 text-primary" />
+              </div>
+              <h3 className="text-3xl font-display font-bold text-secondary mb-4">Submission <span className="text-primary">Successful!</span></h3>
+              <p className="text-secondary/60 font-medium leading-relaxed mb-10">
+                Thank you for your interest. Our academic counselor will reach out to you within 24 hours to guide you further.
+              </p>
+              <button 
+                onClick={() => setShowSuccess(false)}
+                className="w-full bg-secondary text-white py-5 rounded-2xl text-lg font-bold hover:bg-secondary/90 transition-all shadow-xl shadow-secondary/20"
+              >
+                Got it, thanks!
+              </button>
             </motion.div>
           </div>
         )}
