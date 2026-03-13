@@ -6,6 +6,9 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Jain Online MBA - International Finance",
   description: "Online MBA in International Finance by Jain University, designed with Lakshya Commerce style.",
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({
