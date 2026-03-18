@@ -705,9 +705,6 @@ const CertificateSection = ({ onApply }: { onApply: (title?: string, subtitle?: 
                 className="w-full rounded-xl shadow-lg"
                 referrerPolicy="no-referrer"
               />
-              <div className="absolute -top-6 -right-6 bg-primary text-secondary font-bold px-6 py-3 rounded-full shadow-xl rotate-12">
-                Sample certificate
-              </div>
             </div>
           </div>
         </div>
