@@ -854,6 +854,7 @@ export default function Page() {
   const [email, setEmail] = useState("");
   const [workExp, setWorkExp] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [phoneError, setPhoneError] = useState("");
   const [modalContent, setModalContent] = useState({
     title: "Speak to Counselor",
     subtitle: "Enter your details to get a call back from our experts."
@@ -866,6 +867,7 @@ export default function Page() {
     setModalContent({ title: modalTitle, subtitle: modalSubtitle });
     setFullName("");
     setPhone("");
+    setPhoneError("");
     setEmail("");
     setWorkExp("");
     setModalStep(1);
@@ -874,7 +876,11 @@ export default function Page() {
 
   const handleModalStep1Submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (phone.length >= 10 && fullName.trim().length > 0) {
+    if (phone.length !== 10) {
+      setPhoneError("Please enter a valid 10-digit mobile number.");
+      return;
+    }
+    if (fullName.trim().length === 0) return;
       trackFormSubmit({ form_name: 'lead_modal', form_step: 'step1', source: modalContent.title });
       
       // Perform initial sync with name and phone
@@ -910,7 +916,6 @@ export default function Page() {
       }
 
       setModalStep(2);
-    }
   };
 
   const handleFinalSubmit = async (e: React.FormEvent) => {
@@ -956,6 +961,19 @@ export default function Page() {
       trackFormSubmit({ form_name: 'lead_modal', form_step: 'final', source: `Jain Online - ${modalContent.title}` });
       setIsModalOpen(false);
       setShowSuccess(true);
+
+      // Auto-download syllabus PDF if user requested it
+      const title = modalContent.title.toLowerCase();
+      if (title.includes('syllabus') || title.includes('download') || title.includes('fee')) {
+        const link = document.createElement('a');
+        link.href = 'https://lakshyacommerce.s3.ap-south-1.amazonaws.com/MBA+Jain.pdf';
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.download = 'Jain_Online_MBA_Syllabus.pdf';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
     } catch (error) {
       console.error(error);
       alert("Something went wrong. Please try again.");
@@ -1061,11 +1079,25 @@ export default function Page() {
                             type="tel" 
                             required 
                             value={phone}
-                            onChange={(e) => setPhone(e.target.value)}
+                            onChange={(e) => {
+                              const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+                              setPhone(digits);
+                              if (digits.length > 0 && digits.length < 10) {
+                                setPhoneError("Mobile number must be exactly 10 digits.");
+                              } else {
+                                setPhoneError("");
+                              }
+                            }}
                             placeholder="Mobile Number"
-                            className="w-full px-6 py-4 bg-transparent outline-none font-medium"
+                            maxLength={10}
+                            className={`w-full px-6 py-4 bg-transparent outline-none font-medium ${
+                              phoneError ? 'text-red-500' : ''
+                            }`}
                           />
                         </div>
+                        {phoneError && (
+                          <p className="text-red-500 text-xs font-medium mt-1 ml-1">{phoneError}</p>
+                        )}
                       </div>
                     </div>
                     <button type="submit" className="w-full bg-primary text-secondary py-5 rounded-2xl text-xl font-bold hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-primary/20">

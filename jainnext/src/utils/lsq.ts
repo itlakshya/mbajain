@@ -132,7 +132,7 @@ export const syncLeadWithLsq = async (params: {
     const sourceForLsq =
         params.sourceUrl && params.sourceUrl.trim()
             ? (extractDomain(params.sourceUrl) || params.sourceUrl.trim())
-            : (process.env.APP_URL ? extractDomain(process.env.APP_URL) : "jainonline.com");
+            : (process.env.APP_URL ? extractDomain(process.env.APP_URL) : "mba Jain");
 
     const attributes: LeadAttribute[] = [
         { Attribute: "FirstName", Value: firstName || "" },
