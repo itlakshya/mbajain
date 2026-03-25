@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/',
-        destination: '/online-mba-jainuniversity',
+        destination: '/online-mba-course-jainuniversity',
         permanent: true,
       },
     ];
