@@ -185,9 +185,13 @@ const Navbar = ({ onApply }: { onApply: (title?: string, subtitle?: string) => v
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-secondary font-bold text-xl">
-              J
-            </div>
+            <Image 
+              src="/logo.png" 
+              alt="Jain Online Logo" 
+              width={40} 
+              height={40} 
+              className="w-10 h-10 object-contain"
+            />
             <span className="font-display font-bold text-xl tracking-tight text-secondary">Jain online</span>
           </div>
           
@@ -826,13 +830,22 @@ const Footer = () => {
     <footer className="bg-secondary py-12 pb-28 md:pb-12 border-t border-white/5">
       <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-8">
         <div className="flex items-center gap-2">
-          <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-secondary font-bold text-xl">
-            J
-          </div>
+          <Image 
+            src="/logo.png" 
+            alt="Jain Online Logo" 
+            width={40} 
+            height={40} 
+            className="w-10 h-10 object-contain"
+          />
           <span className="font-display font-bold text-2xl tracking-tight text-white">Jain online</span>
         </div>
         <p className="text-white/20 text-sm font-medium">
           © 2026 IIC Lakshya. All rights reserved.
+        </p>
+      </div>
+      <div className="max-w-7xl mx-auto px-4 mt-8 pt-8 border-t border-white/5">
+        <p className="text-white/50 text-xs md:text-sm leading-relaxed text-center">
+          Disclaimer: We act as a service partner only for MBA+ACCA program. Jain University hold full rights to request change or removal of any non-relevant content for their MBA program. Images used are for illustrative purposes and do not directly represent the respective colleges or universities.
         </p>
       </div>
     </footer>
@@ -1146,7 +1159,7 @@ export default function Page() {
                       disabled={isSubmitting}
                       className="w-full bg-primary text-secondary py-5 rounded-xl text-lg font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 mt-4 disabled:opacity-50"
                     >
-                      {isSubmitting ? "Connecting..." : "Submit & connect"}
+                      {isSubmitting ? "Connecting..." : "Submit "}
                     </button>
                   </form>
                 </>

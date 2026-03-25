@@ -984,7 +984,7 @@ export default function App() {
                       </div>
                     </div>
                     <button type="submit" className="w-full bg-primary text-secondary py-5 rounded-xl text-lg font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 mt-4">
-                      Submit & connect
+                      Submit
                     </button>
                   </form>
                 </>

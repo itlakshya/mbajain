@@ -129,18 +129,13 @@ export const syncLeadWithLsq = async (params: {
     const [firstName, ...rest] = name.split(/\s+/);
     const lastName = rest.join(" ").trim();
 
-    const sourceForLsq =
-        params.sourceUrl && params.sourceUrl.trim()
-            ? (extractDomain(params.sourceUrl) || params.sourceUrl.trim())
-            : (process.env.APP_URL ? extractDomain(process.env.APP_URL) : "mba Jain");
-
     const attributes: LeadAttribute[] = [
         { Attribute: "FirstName", Value: firstName || "" },
         { Attribute: "LastName", Value: lastName || "" },
         { Attribute: "Phone", Value: phone },
         { Attribute: "EmailAddress", Value: params.email || "" },
         { Attribute: "mx_Work_Experience", Value: params.workExp || "" },
-        { Attribute: "Source", Value: sourceForLsq }
+        { Attribute: "mx_Conversion_Ref_URL", Value: params.sourceUrl || "" }
     ].filter(attr => attr.Value !== "");
 
     if (process.env.ENABLE_LSQ_SYNC !== "true") {
