@@ -367,7 +367,7 @@ const Accreditations = () => {
 
 const Comparison = ({ onApply }: { onApply: (title?: string, subtitle?: string) => void }) => {
   return (
-    <section className="py-16 md:py-20 bg-paper">
+    <section className="pt-4 pb-16 md:pt-6 md:pb-20 bg-paper">
       <div className="max-w-7xl mx-auto px-4">
         <div className="text-center mb-10 md:mb-12">
           <h2 className="font-display text-3xl md:text-5xl font-bold text-secondary mb-4">
@@ -432,7 +432,7 @@ const Curriculum = ({ onApply }: { onApply: (title?: string, subtitle?: string) 
   const [activeSem, setActiveSem] = useState(0);
 
   return (
-    <section id="curriculum" className="py-16 md:py-20 bg-white">
+    <section id="curriculum" className="pt-16 pb-4 md:pt-20 md:pb-6 bg-white">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-8">
           <div className="text-center md:text-left">
@@ -514,7 +514,7 @@ const Curriculum = ({ onApply }: { onApply: (title?: string, subtitle?: string) 
 
 const BrightFuture = () => {
   return (
-    <section className="pt-8 pb-16 md:pt-10 md:pb-20 bg-white overflow-hidden">
+    <section className="pt-4 pb-16 md:pt-6 md:pb-20 bg-white overflow-hidden">
       <div className="max-w-7xl mx-auto px-4">
         <div className="max-w-4xl mx-auto text-center">
           <motion.div
@@ -554,7 +554,7 @@ const BrightFuture = () => {
 
 const Eligibility = () => {
   return (
-    <section id="eligibility" className="py-12 md:py-16 bg-paper overflow-hidden">
+    <section id="eligibility" className="pt-12 pb-4 md:pt-16 md:pb-6 bg-paper overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 text-center">
         <h2 className="font-display text-3xl md:text-5xl font-bold text-secondary mb-10">
           Who can <span className="text-primary">apply?</span>
@@ -578,7 +578,7 @@ const Eligibility = () => {
 
 const Careers = ({ onApply }: { onApply: (title?: string, subtitle?: string) => void }) => {
   return (
-    <section id="careers" className="py-10 md:py-20 bg-white">
+    <section id="careers" className="pt-4 pb-10 md:pt-6 md:pb-20 bg-white">
       <div className="max-w-7xl mx-auto px-4">
         <div className="text-center mb-10 md:mb-12">
           <h2 className="font-display text-3xl md:text-5xl font-bold text-secondary mb-4">
@@ -729,7 +729,7 @@ const CertificateSection = ({ onApply }: { onApply: (title?: string, subtitle?: 
 
 const HiringPartners = () => {
   return (
-    <section className="py-16 md:py-20 bg-paper overflow-hidden">
+    <section className="pt-16 pb-4 md:pt-20 md:pb-6 bg-paper overflow-hidden">
       <div className="max-w-7xl mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="font-display text-4xl md:text-5xl font-bold text-secondary mb-4">
@@ -765,7 +765,7 @@ const FAQ = () => {
   const displayedFaqs = showAll ? CONTENT.faqs : CONTENT.faqs.slice(0, 3);
 
   return (
-    <section id="faq" className="py-16 md:py-20 bg-paper">
+    <section id="faq" className="pt-4 pb-16 md:pt-6 md:pb-20 bg-paper">
       <div className="max-w-4xl mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="font-display text-4xl md:text-5xl font-bold text-secondary mb-4">
