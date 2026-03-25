@@ -35,27 +35,20 @@ export async function POST(request: Request) {
             );
         }
 
-        // 1. Store in Database using Raw SQL (PostgreSQL)
-        try {
-            const query = `
-                INSERT INTO "Lead" ("fullName", "email", "mobile", "workExp", "source", "updatedAt")
-                VALUES ($1, $2, $3, $4, $5, NOW())
-                ON CONFLICT ("mobile") 
-                DO UPDATE SET 
-                    "fullName" = EXCLUDED."fullName",
-                    "email" = EXCLUDED."email",
-                    "workExp" = EXCLUDED."workExp",
-                    "source" = EXCLUDED."source",
-                    "updatedAt" = NOW();
-            `;
-            const values = [fullName, email, mobile, workExp, source];
-            await pool.query(query, values);
-        } catch (dbError) {
-            console.error('Database Error:', dbError);
-        }
+        // 1 & 2. Store in Database and Sync with LeadSquared in parallel
+        const dbQueryPromise = pool.query(`
+            INSERT INTO "Lead" ("fullName", "email", "mobile", "workExp", "source", "updatedAt")
+            VALUES ($1, $2, $3, $4, $5, NOW())
+            ON CONFLICT ("mobile") 
+            DO UPDATE SET 
+                "fullName" = EXCLUDED."fullName",
+                "email" = EXCLUDED."email",
+                "workExp" = EXCLUDED."workExp",
+                "source" = EXCLUDED."source",
+                "updatedAt" = NOW();
+        `, [fullName, email, mobile, workExp, source]);
 
-        // 2. Sync with LeadSquared
-        const result = await syncLeadWithLsq({
+        const lsqPromise = syncLeadWithLsq({
             fullName,
             email,
             mobile,
@@ -63,6 +56,11 @@ export async function POST(request: Request) {
             source,
             sourceUrl: sourceUrl || null,
         });
+
+        const [dbResult, result] = await Promise.all([
+            dbQueryPromise.catch(err => { console.error('DB Error:', err); return null; }),
+            lsqPromise.catch(err => { console.error('LSQ Error:', err); return null; })
+        ]);
 
         return NextResponse.json({ success: true, result });
     } catch (error: any) {

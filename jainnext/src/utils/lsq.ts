@@ -144,29 +144,8 @@ export const syncLeadWithLsq = async (params: {
     }
 
     try {
-        const lead = await fetchLeadByPhone(phone);
-        if (lead) {
-            // Find attributes that are missing or empty in LSQ
-            const pending = attributes.filter((attr) => {
-                if (attr.Attribute === "Phone") return true; // Keep phone as identifier
-                const current = lead[attr.Attribute];
-                if (current === null || current === undefined) return true;
-                if (typeof current === "string" && current.trim() === "") return true;
-                return false;
-            });
-
-            // If only phone is present, nothing to update
-            if (pending.length <= 1) {
-                return { status: "already_up_to_date" };
-            }
-
-            await sendLeadSquaredCapture(pending, "Phone");
-            return { status: "updated_empty_fields" };
-        } else {
-            // Create new lead
-            await sendLeadSquaredCapture(attributes, "Phone");
-            return { status: "created_new_lead" };
-        }
+        await sendLeadSquaredCapture(attributes, "Phone");
+        return { status: "processed" };
     } catch (err) {
         console.error("LeadSquared Sync Error:", err);
         throw err;
