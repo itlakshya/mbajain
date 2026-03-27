@@ -39,6 +39,12 @@ export const sendLeadSquaredCapture = async (
 ) => {
     const { host, accessKey, secretKey } = getEnv();
     if (process.env.ENABLE_LSQ_SYNC !== "true" || !host || !accessKey || !secretKey) {
+        console.log('[lsq] skip capture', {
+            enabled: process.env.ENABLE_LSQ_SYNC,
+            hasHost: Boolean(host),
+            hasAccessKey: Boolean(accessKey),
+            hasSecretKey: Boolean(secretKey),
+        });
         return;
     }
 
@@ -129,13 +135,22 @@ export const syncLeadWithLsq = async (params: {
     const [firstName, ...rest] = name.split(/\s+/);
     const lastName = rest.join(" ").trim();
 
+    const conversionUrl = (params.sourceUrl || "").trim();
+    console.log('[lsq] building attributes', {
+        phone,
+        source: params.source,
+        conversionUrl,
+        conversionUrlHasUtm: /[?&]utm_/i.test(conversionUrl),
+        conversionUrlHasGclid: /[?&]gclid=/i.test(conversionUrl),
+    });
+
     const attributes: LeadAttribute[] = [
         { Attribute: "FirstName", Value: firstName || "" },
         { Attribute: "LastName", Value: lastName || "" },
         { Attribute: "Phone", Value: phone },
         { Attribute: "EmailAddress", Value: params.email || "" },
         { Attribute: "mx_Work_Experience", Value: params.workExp || "" },
-        { Attribute: "mx_Conversion_Ref_URL", Value: params.sourceUrl || "" }
+        { Attribute: "mx_Conversion_Ref_URL", Value: conversionUrl }
     ].filter(attr => attr.Value !== "");
 
     if (process.env.ENABLE_LSQ_SYNC !== "true") {

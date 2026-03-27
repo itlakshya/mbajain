@@ -8,6 +8,12 @@ export async function POST(request: Request) {
     try {
         const body = await request.json();
         const { fullName, email, mobile, workExp, source, sourceUrl, recaptchaToken } = body;
+        console.log('[sync-lead] incoming', {
+            mobile,
+            hasEmail: Boolean(email),
+            source,
+            sourceUrl,
+        });
 
         // Verify reCAPTCHA
         if (process.env.GOOGLE_RECAPTCHE_SECRET) {
@@ -36,6 +42,9 @@ export async function POST(request: Request) {
         }
 
         // 1 & 2. Store in Database and Sync with LeadSquared in parallel
+        const safeEmail = (email ?? '').trim();
+        const safeWorkExp = (workExp ?? '').trim();
+
         const dbQueryPromise = pool.query(`
             INSERT INTO "Lead" ("fullName", "email", "mobile", "workExp", "source", "updatedAt")
             VALUES ($1, $2, $3, $4, $5, NOW())
@@ -46,13 +55,13 @@ export async function POST(request: Request) {
                 "workExp" = EXCLUDED."workExp",
                 "source" = EXCLUDED."source",
                 "updatedAt" = NOW();
-        `, [fullName, email, mobile, workExp, source]);
+        `, [fullName, safeEmail, mobile, safeWorkExp, source]);
 
         const lsqPromise = syncLeadWithLsq({
             fullName,
-            email,
+            email: safeEmail,
             mobile,
-            workExp,
+            workExp: safeWorkExp,
             source,
             sourceUrl: sourceUrl || null,
         });

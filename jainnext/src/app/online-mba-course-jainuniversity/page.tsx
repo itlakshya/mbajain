@@ -5,10 +5,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'motion/react';
 import { trackFormSubmit, trackButtonClick } from '@/lib/gtm';
+import { buildConversionRefUrl, captureTrackingParamsFromCurrentUrl, debugTrackingSnapshot } from '@/lib/conversionRefUrl';
 import { 
   CheckCircle2, 
   ChevronDown, 
@@ -873,6 +874,16 @@ export default function Page() {
     subtitle: "Enter your details to get a call back from our experts."
   });
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      captureTrackingParamsFromCurrentUrl();
+      debugTrackingSnapshot();
+    } catch {
+      // ignore storage access failures (privacy mode, etc.)
+    }
+  }, []);
+
   const openModal = (title?: string, subtitle?: string) => {
     const modalTitle = title || "Speak to Counselor";
     const modalSubtitle = subtitle || "Enter your details to get a call back from our experts.";
@@ -913,6 +924,8 @@ export default function Page() {
           console.error("reCAPTCHA Step 1 Error:", reError);
         }
 
+        const storedUrl = typeof window !== 'undefined' ? buildConversionRefUrl() : undefined;
+
         fetch('/api/sync-lead', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -920,7 +933,7 @@ export default function Page() {
             fullName,
             mobile: phone,
             source: `Jain Online - ${modalContent.title}`,
-            sourceUrl: typeof window !== 'undefined' ? window.location.href : undefined,
+            sourceUrl: storedUrl,
             recaptchaToken,
           }),
         }).catch(err => console.error("Step 1 background sync failed:", err));
@@ -962,7 +975,7 @@ export default function Page() {
           mobile: phone,
           workExp,
           source: `Jain Online - ${modalContent.title}`,
-          sourceUrl: typeof window !== 'undefined' ? window.location.href : undefined,
+          sourceUrl: typeof window !== 'undefined' ? buildConversionRefUrl() : undefined,
           recaptchaToken,
         }),
       });
