@@ -9,7 +9,7 @@ import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'motion/react';
 import { trackFormSubmit, trackButtonClick } from '@/lib/gtm';
-import { buildConversionRefUrl, captureTrackingParamsFromCurrentUrl, debugTrackingSnapshot } from '@/lib/conversionRefUrl';
+import { buildConversionRefUrl, captureTrackingParamsFromCurrentUrl } from '@/lib/conversionRefUrl';
 import { 
   CheckCircle2, 
   ChevronDown, 
@@ -878,7 +878,6 @@ export default function Page() {
     if (typeof window === 'undefined') return;
     try {
       captureTrackingParamsFromCurrentUrl();
-      debugTrackingSnapshot();
     } catch {
       // ignore storage access failures (privacy mode, etc.)
     }

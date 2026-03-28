@@ -8,12 +8,6 @@ export async function POST(request: Request) {
     try {
         const body = await request.json();
         const { fullName, email, mobile, workExp, source, sourceUrl, recaptchaToken } = body;
-        console.log('[sync-lead] incoming', {
-            mobile,
-            hasEmail: Boolean(email),
-            source,
-            sourceUrl,
-        });
 
         // Verify reCAPTCHA
         if (process.env.GOOGLE_RECAPTCHE_SECRET) {

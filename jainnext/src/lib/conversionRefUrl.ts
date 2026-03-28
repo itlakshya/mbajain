@@ -24,6 +24,13 @@ const TRACKING_KEYS = [
 ];
 
 const LSQ_TRACKING_PARAMS_KEY = 'lsq_tracking_params';
+const LSQ_TRACKING_COOKIE = 'lsq_tp';
+
+const readCookie = (name: string) => {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(new RegExp(`(?:^|; )${name.replace(/[$()*+./?[\\\\\\]^{|}-]/g, '\\\\$&')}=([^;]*)`));
+  return match ? decodeURIComponent(match[1] || '') : null;
+};
 
 const safeGetSessionStorage = () => {
   try {
@@ -60,6 +67,15 @@ export function captureTrackingParamsFromCurrentUrl() {
     collectFromUrl(document.referrer);
   }
 
+  // 3) Cookie fallback (set by middleware on first hit)
+  const cookieParams = readCookie(LSQ_TRACKING_COOKIE);
+  if (cookieParams) {
+    const stored = new URLSearchParams(cookieParams);
+    for (const [k, v] of stored.entries()) {
+      if (!params.has(k) && v) params.set(k, v);
+    }
+  }
+
   const asString = params.toString();
   if (asString) storage.setItem(LSQ_TRACKING_PARAMS_KEY, asString);
 }
@@ -70,10 +86,17 @@ export function buildConversionRefUrl(): string {
 
   const url = new URL(window.location.href);
   const storedParams = storage ? storage.getItem(LSQ_TRACKING_PARAMS_KEY) : null;
+  const cookieParams = readCookie(LSQ_TRACKING_COOKIE);
   const merged = new URLSearchParams(url.search);
 
   if (storedParams) {
     const stored = new URLSearchParams(storedParams);
+    for (const [k, v] of stored.entries()) {
+      if (!merged.has(k) && v) merged.set(k, v);
+    }
+  }
+  if (cookieParams) {
+    const stored = new URLSearchParams(cookieParams);
     for (const [k, v] of stored.entries()) {
       if (!merged.has(k) && v) merged.set(k, v);
     }
@@ -84,17 +107,3 @@ export function buildConversionRefUrl(): string {
   url.search = merged.toString();
   return url.toString();
 }
-
-export function debugTrackingSnapshot() {
-  if (typeof window === 'undefined') return;
-  const storage = safeGetSessionStorage();
-  const storedParams = storage ? storage.getItem(LSQ_TRACKING_PARAMS_KEY) : null;
-  console.log('[tracking] snapshot', {
-    href: window.location.href,
-    referrer: document.referrer || null,
-    storedParams,
-    hrefHasUtm: /[?&]utm_/i.test(window.location.href),
-    storedHasUtm: storedParams ? /(^|&)utm_/i.test(storedParams) : false,
-  });
-}
-

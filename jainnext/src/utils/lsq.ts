@@ -25,12 +25,14 @@ const normalizeHost = (host: string) => {
     return withoutTrailing.replace(/\/v2$/i, "");
 };
 
+/**
+ * Lead.Capture without LeadUpdateBehavior so existing leads are updated with new values
+ * (e.g. new email for same phone). See:
+ * https://apidocs.leadsquared.com/capture-lead — UpdateOnlyEmptyFields only fills blanks.
+ */
 const buildLeadCaptureUrl = (host: string) => {
     const base = normalizeHost(host);
-    const params = new URLSearchParams({
-        LeadUpdateBehavior: "UpdateOnlyEmptyFields"
-    });
-    return `${base}/v2/LeadManagement.svc/Lead.Capture?${params.toString()}`;
+    return `${base}/v2/LeadManagement.svc/Lead.Capture`;
 };
 
 export const sendLeadSquaredCapture = async (
@@ -39,12 +41,6 @@ export const sendLeadSquaredCapture = async (
 ) => {
     const { host, accessKey, secretKey } = getEnv();
     if (process.env.ENABLE_LSQ_SYNC !== "true" || !host || !accessKey || !secretKey) {
-        console.log('[lsq] skip capture', {
-            enabled: process.env.ENABLE_LSQ_SYNC,
-            hasHost: Boolean(host),
-            hasAccessKey: Boolean(accessKey),
-            hasSecretKey: Boolean(secretKey),
-        });
         return;
     }
 
@@ -136,13 +132,6 @@ export const syncLeadWithLsq = async (params: {
     const lastName = rest.join(" ").trim();
 
     const conversionUrl = (params.sourceUrl || "").trim();
-    console.log('[lsq] building attributes', {
-        phone,
-        source: params.source,
-        conversionUrl,
-        conversionUrlHasUtm: /[?&]utm_/i.test(conversionUrl),
-        conversionUrlHasGclid: /[?&]gclid=/i.test(conversionUrl),
-    });
 
     const attributes: LeadAttribute[] = [
         { Attribute: "FirstName", Value: firstName || "" },
@@ -154,7 +143,6 @@ export const syncLeadWithLsq = async (params: {
     ].filter(attr => attr.Value !== "");
 
     if (process.env.ENABLE_LSQ_SYNC !== "true") {
-        console.log("LSQ Sync disabled, skipping:", attributes);
         return;
     }
 
