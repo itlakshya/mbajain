@@ -123,6 +123,8 @@ export const syncLeadWithLsq = async (params: {
     workExp: string;
     source: string;
     sourceUrl?: string | null;
+    trackingParams?: string | null;
+    firstTrackingParams?: string | null;
 }) => {
     const phone = normalizePhoneForLsq(params.mobile);
     if (!phone) throw new Error("Invalid phone number");
@@ -133,13 +135,80 @@ export const syncLeadWithLsq = async (params: {
 
     const conversionUrl = (params.sourceUrl || "").trim();
 
+    const pick = (sp: URLSearchParams, key: string) => {
+        const v = sp.get(key);
+        return v && v.trim() ? v.trim() : "";
+    };
+
+    const utmKeys = [
+        "utm_source",
+        "utm_medium",
+        "utm_campaign",
+        "utm_term",
+        "utm_content",
+        "utm_adgroup",
+        "utm_device",
+        "utm_region",
+    ];
+
+    let urlParams: URLSearchParams | null = null;
+    try {
+        urlParams = conversionUrl ? new URL(conversionUrl).searchParams : null;
+    } catch {
+        urlParams = null;
+    }
+
+    const decodeMaybe = (raw?: string | null) => {
+        const value = (raw || "").trim();
+        if (!value) return "";
+        // Cookies are stored URL-encoded; decode when needed.
+        try {
+            const decoded = decodeURIComponent(value);
+            // If decode doesn't introduce '=' it's probably not encoded; return original.
+            return decoded.includes("=") ? decoded : value;
+        } catch {
+            return value;
+        }
+    };
+
+    const latestParams = new URLSearchParams(decodeMaybe(params.trackingParams));
+    const firstParams = new URLSearchParams(decodeMaybe(params.firstTrackingParams));
+
+    const resolveLatest = (key: string) =>
+        (urlParams ? pick(urlParams, key) : "") || pick(latestParams, key);
+    const resolveFirst = (key: string) => pick(firstParams, key);
+
+    const utmAttributes: LeadAttribute[] = [
+        { Attribute: "mx_utm_source", Value: resolveLatest("utm_source") },
+        { Attribute: "mx_utm_medium", Value: resolveLatest("utm_medium") },
+        { Attribute: "mx_utm_campaign", Value: resolveLatest("utm_campaign") },
+        { Attribute: "mx_utm_term", Value: resolveLatest("utm_term") },
+        { Attribute: "mx_utm_content", Value: resolveLatest("utm_content") },
+        { Attribute: "mx_utm_adgroup", Value: resolveLatest("utm_adgroup") },
+        { Attribute: "mx_utm_device", Value: resolveLatest("utm_device") },
+        { Attribute: "mx_utm_region", Value: resolveLatest("utm_region") },
+    ].filter(a => a.Value !== "");
+
+    const firstUtmAttributes: LeadAttribute[] = [
+        { Attribute: "mx_first_utm_source", Value: resolveFirst("utm_source") },
+        { Attribute: "mx_first_utm_medium", Value: resolveFirst("utm_medium") },
+        { Attribute: "mx_first_utm_campaign", Value: resolveFirst("utm_campaign") },
+        { Attribute: "mx_first_utm_term", Value: resolveFirst("utm_term") },
+        { Attribute: "mx_first_utm_content", Value: resolveFirst("utm_content") },
+        { Attribute: "mx_first_utm_adgroup", Value: resolveFirst("utm_adgroup") },
+        { Attribute: "mx_first_utm_device", Value: resolveFirst("utm_device") },
+        { Attribute: "mx_first_utm_region", Value: resolveFirst("utm_region") },
+    ].filter(a => a.Value !== "");
+
     const attributes: LeadAttribute[] = [
         { Attribute: "FirstName", Value: firstName || "" },
         { Attribute: "LastName", Value: lastName || "" },
         { Attribute: "Phone", Value: phone },
         { Attribute: "EmailAddress", Value: params.email || "" },
         { Attribute: "mx_Work_Experience", Value: params.workExp || "" },
-        { Attribute: "mx_Conversion_Ref_URL", Value: conversionUrl }
+        { Attribute: "mx_Conversion_Ref_URL", Value: conversionUrl },
+        ...utmAttributes,
+        ...firstUtmAttributes,
     ].filter(attr => attr.Value !== "");
 
     if (process.env.ENABLE_LSQ_SYNC !== "true") {

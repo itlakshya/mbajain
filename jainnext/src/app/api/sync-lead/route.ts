@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { syncLeadWithLsq } from '@/utils/lsq';
 import pool from '@/utils/db';
+import { cookies } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
 
@@ -51,6 +52,7 @@ export async function POST(request: Request) {
                 "updatedAt" = NOW();
         `, [fullName, safeEmail, mobile, safeWorkExp, source]);
 
+        const cookieStore = await cookies();
         const lsqPromise = syncLeadWithLsq({
             fullName,
             email: safeEmail,
@@ -58,6 +60,8 @@ export async function POST(request: Request) {
             workExp: safeWorkExp,
             source,
             sourceUrl: sourceUrl || null,
+            trackingParams: cookieStore.get('lsq_tp')?.value ?? null,
+            firstTrackingParams: cookieStore.get('lsq_tp_first')?.value ?? null,
         });
 
         const [dbResult, result] = await Promise.all([

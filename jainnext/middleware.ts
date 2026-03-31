@@ -21,7 +21,8 @@ const TRACKING_KEYS = [
   'placement',
 ];
 
-const COOKIE_NAME = 'lsq_tp';
+const COOKIE_LATEST = 'lsq_tp';
+const COOKIE_FIRST = 'lsq_tp_first';
 
 export function middleware(req: NextRequest) {
   const url = req.nextUrl;
@@ -48,12 +49,25 @@ export function middleware(req: NextRequest) {
 
   const res = NextResponse.next();
 
-  if (params.toString()) {
-    res.cookies.set(COOKIE_NAME, params.toString(), {
+  const serialized = params.toString();
+  if (serialized) {
+    const cookieValue = encodeURIComponent(serialized);
+    // Latest (keeps most recent values)
+    res.cookies.set(COOKIE_LATEST, cookieValue, {
       path: '/',
       maxAge: 60 * 60 * 24 * 30, // 30 days
       sameSite: 'lax',
     });
+
+    // First-touch (only set once)
+    const hasFirst = req.cookies.get(COOKIE_FIRST)?.value;
+    if (!hasFirst) {
+      res.cookies.set(COOKIE_FIRST, cookieValue, {
+        path: '/',
+        maxAge: 60 * 60 * 24 * 30, // 30 days
+        sameSite: 'lax',
+      });
+    }
   }
 
   return res;
