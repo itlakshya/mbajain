@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'motion/react';
 import { trackFormSubmit, trackButtonClick } from '@/lib/gtm';
@@ -860,6 +860,10 @@ declare global {
 }
 
 export default function Page() {
+  /** Ensures `form_submit` dataLayer push runs once per successful full completion (guards Strict Mode / double-submit). */
+  const formSubmitCompleteRef = useRef(false);
+  /** Synchronous lock: React state updates too late to stop a second click on the submit button. */
+  const finalSubmitInFlightRef = useRef(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalStep, setModalStep] = useState(1);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -868,6 +872,7 @@ export default function Page() {
   const [email, setEmail] = useState("");
   const [workExp, setWorkExp] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isStep1Submitting, setIsStep1Submitting] = useState(false);
   const [phoneError, setPhoneError] = useState("");
   const [modalContent, setModalContent] = useState({
     title: "Speak to Counselor",
@@ -894,6 +899,7 @@ export default function Page() {
     setEmail("");
     setWorkExp("");
     setModalStep(1);
+    formSubmitCompleteRef.current = false;
     setIsModalOpen(true);
   };
 
@@ -904,47 +910,51 @@ export default function Page() {
       return;
     }
     if (fullName.trim().length === 0) return;
-      trackFormSubmit({ form_name: 'lead_modal', form_step: 'step1', source: modalContent.title });
-      
-      // Perform initial sync with name and phone
+    if (isStep1Submitting) return;
+    setIsStep1Submitting(true);
+
+    try {
+      // Do not push `form_submit` here — GTM GA4 tag listens on `form_submit`; only fire after full form success.
+      let recaptchaToken = "";
       try {
-        let recaptchaToken = "";
-        try {
-          if (window.grecaptcha) {
-            recaptchaToken = await new Promise((resolve) => {
-              window.grecaptcha.ready(() => {
-                window.grecaptcha.execute(process.env.NEXT_PUBLIC_GOOGLE_RECAPTCHE_SITE_KEY, { action: 'step1' }).then((token: string) => {
-                  resolve(token);
-                });
+        if (window.grecaptcha) {
+          recaptchaToken = await new Promise((resolve) => {
+            window.grecaptcha.ready(() => {
+              window.grecaptcha.execute(process.env.NEXT_PUBLIC_GOOGLE_RECAPTCHE_SITE_KEY, { action: 'step1' }).then((token: string) => {
+                resolve(token);
               });
             });
-          }
-        } catch (reError) {
-          console.error("reCAPTCHA Step 1 Error:", reError);
+          });
         }
-
-        const storedUrl = typeof window !== 'undefined' ? buildConversionRefUrl() : undefined;
-
-        fetch('/api/sync-lead', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            fullName,
-            mobile: phone,
-            source: `Jain Online - ${modalContent.title}`,
-            sourceUrl: storedUrl,
-            recaptchaToken,
-          }),
-        }).catch(err => console.error("Step 1 background sync failed:", err));
-      } catch (err) {
-        console.error("Step 1 sync error:", err);
+      } catch (reError) {
+        console.error("reCAPTCHA Step 1 Error:", reError);
       }
 
+      const storedUrl = typeof window !== 'undefined' ? buildConversionRefUrl() : undefined;
+
+      fetch('/api/sync-lead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fullName,
+          mobile: phone,
+          source: `Jain Online - ${modalContent.title}`,
+          sourceUrl: storedUrl,
+          recaptchaToken,
+        }),
+      }).catch(err => console.error("Step 1 background sync failed:", err));
+    } catch (err) {
+      console.error("Step 1 sync error:", err);
+    } finally {
+      setIsStep1Submitting(false);
       setModalStep(2);
+    }
   };
 
   const handleFinalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (finalSubmitInFlightRef.current) return;
+    finalSubmitInFlightRef.current = true;
     setIsSubmitting(true);
     try {
       // Execute reCAPTCHA
@@ -983,7 +993,14 @@ export default function Page() {
         throw new Error('Failed to sync with LeadSquared');
       }
 
-      trackFormSubmit({ form_name: 'lead_modal', form_step: 'final', source: `Jain Online - ${modalContent.title}` });
+      if (!formSubmitCompleteRef.current) {
+        formSubmitCompleteRef.current = true;
+        trackFormSubmit({
+          form_name: 'lead_modal',
+          form_step: 'final',
+          source: `Jain Online - ${modalContent.title}`,
+        });
+      }
       setIsModalOpen(false);
       setShowSuccess(true);
 
@@ -1003,6 +1020,7 @@ export default function Page() {
       console.error(error);
       alert("Something went wrong. Please try again.");
     } finally {
+      finalSubmitInFlightRef.current = false;
       setIsSubmitting(false);
     }
   };
@@ -1125,8 +1143,12 @@ export default function Page() {
                         )}
                       </div>
                     </div>
-                    <button type="submit" className="w-full bg-primary text-secondary py-5 rounded-2xl text-xl font-bold hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-primary/20">
-                      Continue
+                    <button
+                      type="submit"
+                      disabled={isStep1Submitting}
+                      className="w-full bg-primary text-secondary py-5 rounded-2xl text-xl font-bold hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-primary/20 disabled:opacity-60 disabled:pointer-events-none"
+                    >
+                      {isStep1Submitting ? "Please wait..." : "Continue"}
                     </button>
                   </form>
                 </>

@@ -1,10 +1,21 @@
 'use client';
 
-import { sendGTMEvent as pushToDataLayer } from '@next/third-parties/google';
+declare global {
+  interface Window {
+    dataLayer?: unknown[];
+  }
+}
+
+/** Push to GTM dataLayer (direct push, same as GTM snippet). */
+function pushToDataLayer(data: Record<string, unknown>) {
+  if (typeof window === 'undefined') return;
+  window.dataLayer = window.dataLayer ?? [];
+  window.dataLayer.push(data);
+}
 
 /**
- * GTM event names aligned with triggers in GTM (see gtmref.txt).
- * - form_submit: form submissions (lead modal step 1 & final submit)
+ * GTM event names aligned with triggers in GTM.
+ * - form_submit: full lead form completion only (not step 1 — GTM tags often listen on this name)
  * - button_click: CTA / button clicks (e.g. Download Syllabus, Speak to Counselor)
  */
 

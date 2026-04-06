@@ -5,6 +5,44 @@ import { cookies } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
 
+async function leadUpsertWithRetry(
+    fullName: string,
+    safeEmail: string,
+    mobile: string,
+    safeWorkExp: string,
+    source: string
+) {
+    const run = () =>
+        pool.query(
+            `
+            INSERT INTO "Lead" ("fullName", "email", "mobile", "workExp", "source", "updatedAt")
+            VALUES ($1, $2, $3, $4, $5, NOW())
+            ON CONFLICT ("mobile") 
+            DO UPDATE SET 
+                "fullName" = EXCLUDED."fullName",
+                "email" = EXCLUDED."email",
+                "workExp" = EXCLUDED."workExp",
+                "source" = EXCLUDED."source",
+                "updatedAt" = NOW();
+        `,
+            [fullName, safeEmail, mobile, safeWorkExp, source]
+        );
+
+    try {
+        return await run();
+    } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        const transient =
+            /Connection terminated unexpectedly|ECONNRESET|ETIMEDOUT|Connection ended|server closed the connection/i.test(
+                msg
+            );
+        if (transient) {
+            return await run();
+        }
+        throw err;
+    }
+}
+
 export async function POST(request: Request) {
     try {
         const body = await request.json();
@@ -40,17 +78,13 @@ export async function POST(request: Request) {
         const safeEmail = (email ?? '').trim();
         const safeWorkExp = (workExp ?? '').trim();
 
-        const dbQueryPromise = pool.query(`
-            INSERT INTO "Lead" ("fullName", "email", "mobile", "workExp", "source", "updatedAt")
-            VALUES ($1, $2, $3, $4, $5, NOW())
-            ON CONFLICT ("mobile") 
-            DO UPDATE SET 
-                "fullName" = EXCLUDED."fullName",
-                "email" = EXCLUDED."email",
-                "workExp" = EXCLUDED."workExp",
-                "source" = EXCLUDED."source",
-                "updatedAt" = NOW();
-        `, [fullName, safeEmail, mobile, safeWorkExp, source]);
+        const dbQueryPromise = leadUpsertWithRetry(
+            fullName,
+            safeEmail,
+            mobile,
+            safeWorkExp,
+            source
+        );
 
         const cookieStore = await cookies();
         const lsqPromise = syncLeadWithLsq({
