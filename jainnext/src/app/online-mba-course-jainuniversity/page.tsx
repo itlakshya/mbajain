@@ -903,8 +903,8 @@ export default function Page() {
     setIsModalOpen(true);
   };
 
-  const handleModalStep1Submit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  /** No <form> wrapper — avoids GTM native “Form Submit” listeners firing alongside dataLayer `form_submit` (Yenepoya pattern). */
+  const handleModalStep1Submit = async () => {
     if (phone.length !== 10) {
       setPhoneError("Please enter a valid 10-digit mobile number.");
       return;
@@ -951,9 +951,16 @@ export default function Page() {
     }
   };
 
-  const handleFinalSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleFinalSubmit = async () => {
     if (finalSubmitInFlightRef.current) return;
+    if (!email.trim()) {
+      alert("Please enter your email address.");
+      return;
+    }
+    if (!workExp) {
+      alert("Please select your work experience.");
+      return;
+    }
     finalSubmitInFlightRef.current = true;
     setIsSubmitting(true);
     try {
@@ -1099,13 +1106,12 @@ export default function Page() {
                     <h3 className="text-3xl font-bold text-secondary mb-2">{modalContent.title}</h3>
                     <p className="text-secondary/60">{modalContent.subtitle}</p>
                   </div>
-                  <form className="space-y-6" onSubmit={handleModalStep1Submit}>
+                  <div className="space-y-6" role="group" aria-label="Contact details">
                     <div className="space-y-4">
                       <div className="space-y-1.5">
                         <label className="text-xs font-bold text-secondary/50 uppercase tracking-wider ml-1">Full Name</label>
                         <input 
                           type="text" 
-                          required
                           value={fullName}
                           onChange={(e) => setFullName(e.target.value)}
                           placeholder="Enter your full name"
@@ -1120,7 +1126,6 @@ export default function Page() {
                           </div>
                           <input 
                             type="tel" 
-                            required 
                             value={phone}
                             onChange={(e) => {
                               const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
@@ -1144,13 +1149,14 @@ export default function Page() {
                       </div>
                     </div>
                     <button
-                      type="submit"
+                      type="button"
                       disabled={isStep1Submitting}
+                      onClick={() => void handleModalStep1Submit()}
                       className="w-full bg-primary text-secondary py-5 rounded-2xl text-xl font-bold hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-primary/20 disabled:opacity-60 disabled:pointer-events-none"
                     >
                       {isStep1Submitting ? "Please wait..." : "Continue"}
                     </button>
-                  </form>
+                  </div>
                 </>
               ) : (
                 <>
@@ -1158,12 +1164,11 @@ export default function Page() {
                     <h3 className="text-2xl font-bold text-secondary mb-2">Complete Your Profile</h3>
                     <p className="text-secondary/60">Just a few more details to get you started.</p>
                   </div>
-                  <form className="space-y-5" onSubmit={handleFinalSubmit}>
+                  <div className="space-y-5" role="group" aria-label="Profile details">
                     <div className="space-y-1.5">
                       <label className="text-xs font-bold text-secondary/50 uppercase tracking-wider ml-1">Email Address</label>
                       <input 
                         type="email" 
-                        required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="Enter your email"
@@ -1173,7 +1178,6 @@ export default function Page() {
                     <div className="space-y-1.5 relative">
                       <label className="text-xs font-bold text-secondary/50 uppercase tracking-wider ml-1">Current Status / Work Experience</label>
                       <select 
-                        required 
                         value={workExp}
                         onChange={(e) => setWorkExp(e.target.value)}
                         className="w-full px-6 py-4 rounded-xl bg-paper border border-black/5 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all font-medium appearance-none cursor-pointer"
@@ -1189,13 +1193,14 @@ export default function Page() {
                       </div>
                     </div>
                     <button 
-                      type="submit" 
+                      type="button" 
                       disabled={isSubmitting}
+                      onClick={() => void handleFinalSubmit()}
                       className="w-full bg-primary text-secondary py-5 rounded-xl text-lg font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 mt-4 disabled:opacity-50"
                     >
                       {isSubmitting ? "Connecting..." : "Submit "}
                     </button>
-                  </form>
+                  </div>
                 </>
               )}
             </motion.div>
