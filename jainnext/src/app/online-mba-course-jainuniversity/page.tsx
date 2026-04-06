@@ -846,7 +846,7 @@ const Footer = () => {
       </div>
       <div className="max-w-7xl mx-auto px-4 mt-8 pt-8 border-t border-white/5">
         <p className="text-white/50 text-xs md:text-sm leading-relaxed text-center">
-          Disclaimer: We act as a service partner only for MBA+ACCA program. Jain University hold full rights to request change or removal of any non-relevant content for their MBA program. Images used are for illustrative purposes and do not directly represent the respective colleges or universities.
+          Disclaimer: IIC Lakshya act as a service partner only for MBA+ACCA program. Jain University hold full rights to request change or removal of any non-relevant content for their MBA program. Images used are for illustrative purposes and do not directly represent the respective colleges or universities.
         </p>
       </div>
     </footer>
