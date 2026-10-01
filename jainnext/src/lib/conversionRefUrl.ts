@@ -21,6 +21,7 @@ const TRACKING_KEYS = [
   'utm_device',
   'utm_region',
   'placement',
+  'oppref',
 ];
 
 const LSQ_TRACKING_PARAMS_KEY = 'lsq_tracking_params';

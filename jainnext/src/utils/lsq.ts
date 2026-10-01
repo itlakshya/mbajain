@@ -207,6 +207,7 @@ export const syncLeadWithLsq = async (params: {
         { Attribute: "EmailAddress", Value: params.email || "" },
         { Attribute: "mx_Work_Experience", Value: params.workExp || "" },
         { Attribute: "mx_Conversion_Ref_URL", Value: conversionUrl },
+        { Attribute: "mx_oppref", Value: resolveLatest("oppref") },
         ...utmAttributes,
         ...firstUtmAttributes,
     ].filter(attr => attr.Value !== "");

@@ -19,6 +19,7 @@ const TRACKING_KEYS = [
   'utm_device',
   'utm_region',
   'placement',
+  'oppref',
 ];
 
 const COOKIE_LATEST = 'lsq_tp';
