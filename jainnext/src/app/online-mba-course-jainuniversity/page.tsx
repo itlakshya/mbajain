@@ -705,7 +705,7 @@ const CertificateSection = ({ onApply }: { onApply: (title?: string, subtitle?: 
           <div className="order-1 lg:order-2">
             <div className="relative p-4 bg-paper rounded-[2rem] border border-black/5 shadow-2xl">
               <img 
-                src="/sample certificate JAIN.jpeg" 
+                src="/sample-certificate-jain.jpeg" 
                 alt="Sample Certificate" 
                 className="w-full rounded-xl shadow-lg"
                 referrerPolicy="no-referrer"
